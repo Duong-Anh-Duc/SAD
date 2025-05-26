@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import Patient, HealthInsurance
-from .serializers import PatientSerializer, HealthInsuranceSerializer
+from .serializers import PatientSerializer, HealthInsuranceSerializer, PatientUpdateSerializer
 import bcrypt
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -137,3 +137,18 @@ class HealthInsuranceDetailView(APIView):
             return Response({"message": "Xóa bảo hiểm thành công"}, status=204)
         except HealthInsurance.DoesNotExist:
             return Response({"message": "Bảo hiểm không tồn tại"}, status=404)
+# patient/views.py
+class UpdatePatientView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, pk):
+        try:
+            patient = Patient.objects.get(pk=pk, user=request.user)
+            serializer = PatientUpdateSerializer(patient, data=request.data, partial=True)
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+                return Response({"message": "Cập nhật thông tin thành công"}, status=200)
+        except Patient.DoesNotExist:
+            return Response({"message": "Bệnh nhân không tồn tại"}, status=404)
+        except Exception as e:
+            return Response({"message": "Cập nhật thất bại", "errors": serializer.errors}, status=400)

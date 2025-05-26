@@ -137,7 +137,7 @@ const PatientLogin = () => {
           pauseOnHover: true,
           draggable: true,
         });
-        navigate("/detail");
+        navigate("/dashboard");
       })
       .catch(() => {
         toast.error(

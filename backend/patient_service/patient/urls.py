@@ -1,10 +1,11 @@
 from django.urls import path
-from .views import RegisterPatientView, LoginPatientView, LogoutPatientView, GetPatientDetailView, GetAllPatientsView, CustomTokenRefreshView, HealthInsuranceListCreateView, HealthInsuranceDetailView
+from .views import RegisterPatientView, LoginPatientView, LogoutPatientView, GetPatientDetailView, GetAllPatientsView, CustomTokenRefreshView, HealthInsuranceListCreateView, HealthInsuranceDetailView, UpdatePatientView
 
 urlpatterns = [
     path('register/', RegisterPatientView.as_view(), name='register'),
     path('login/', LoginPatientView.as_view(), name='login'),
     path('logout/', LogoutPatientView.as_view(), name='logout'),
+    path('detail/<int:pk>/update/', UpdatePatientView.as_view(), name='update_patient'),
     path('token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
     path('detail/<int:pk>/', GetPatientDetailView.as_view(), name='get_patient_detail'),
     path('all/', GetAllPatientsView.as_view(), name='get_all_patients'),

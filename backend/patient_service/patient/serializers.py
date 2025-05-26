@@ -29,6 +29,19 @@ class PatientSerializer(serializers.ModelSerializer):
             **validated_data
         )
         return patient
+class PatientUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Patient
+        fields = ['ten', 'ngay_sinh', 'gioi_tinh', 'so_dt', 'dia_chi']
+
+    def update(self, instance, validated_data):
+        instance.ten = validated_data.get('ten', instance.ten)
+        instance.ngay_sinh = validated_data.get('ngay_sinh', instance.ngay_sinh)
+        instance.gioi_tinh = validated_data.get('gioi_tinh', instance.gioi_tinh)
+        instance.so_dt = validated_data.get('so_dt', instance.so_dt)
+        instance.dia_chi = validated_data.get('dia_chi', instance.dia_chi)
+        instance.save()
+        return instance
 
 class HealthInsuranceSerializer(serializers.ModelSerializer):
     class Meta:
