@@ -7,16 +7,12 @@ import bcrypt
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework import status
-from fastapi import HTTPException  # Thêm import này
 
 def get_user_id(request):
     user_id = request.headers.get("X-User-ID")
     if not user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User ID not provided")
-    try:
-        return int(user_id)
-    except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid User ID format")
+        return Response({"message": "User ID not provided"}, status=status.HTTP_401_UNAUTHORIZED)
+    return int(user_id)
 
 class RegisterPatientView(APIView):
     permission_classes = [AllowAny]
@@ -76,7 +72,7 @@ class GetPatientDetailView(APIView):
         try:
             patient = Patient.objects.get(pk=pk)
             serializer = PatientSerializer(patient)
-            insurances = HealthInsurance.objects.filter(patient=patient)
+            insurances = HealthInsurance.objects.filter(patient=pk)
             insurance_serializer = HealthInsuranceSerializer(insurances, many=True)
             return Response({
                 "patient": serializer.data,
@@ -102,7 +98,7 @@ class CustomTokenRefreshView(TokenRefreshView):
             return Response({"message": str(e)}, status=400)
 
 class HealthInsuranceListCreateView(APIView):
-    #permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user_id = get_user_id(request)

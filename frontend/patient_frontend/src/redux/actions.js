@@ -1,6 +1,7 @@
 import axios from "axios";
 import { toast } from "react-toastify";
 
+const AUTH_API_GATEWAY_URL = "http://localhost:8080/auth";
 const API_GATEWAY_URL = "http://localhost:8080/patient";
 const APPOINTMENT_API_GATEWAY_URL = "http://localhost:8080/appointment";
 const DOCTOR_API_GATEWAY_URL = "http://localhost:8080/doctor";
@@ -102,7 +103,7 @@ export const restoreSession = () => async (dispatch) => {
 
 export const registerPatient = (patientData) => async (dispatch) => {
   try {
-    const res = await axios.post(`${API_GATEWAY_URL}/register/`, patientData);
+    const res = await axios.post(`${AUTH_API_GATEWAY_URL}/register/`, patientData);
     if (res && res.status === 201) {
       dispatch({ type: "REGISTER_SUCCESS", payload: res.data });
     } else {
@@ -119,12 +120,13 @@ export const registerPatient = (patientData) => async (dispatch) => {
 
 export const loginPatient = (credentials) => async (dispatch) => {
   try {
-    const res = await axios.post(`${API_GATEWAY_URL}/login/`, credentials);
+    credentials.role = "patient";  // Thêm role vào payload
+    const res = await axios.post(`${AUTH_API_GATEWAY_URL}/login/`, credentials);
     if (res && res.data && res.status === 200) {
       dispatch({ type: "LOGIN_SUCCESS", payload: res.data });
       localStorage.setItem("access_token", res.data.access_token || "");
       localStorage.setItem("refresh_token", res.data.refresh_token || "");
-      localStorage.setItem("patient_id", res.data.patient_id || "");
+      localStorage.setItem("patient_id", res.data.user_id || "");
     } else {
       throw new Error(res.data?.message || "Phản hồi từ API không hợp lệ");
     }
@@ -370,7 +372,7 @@ export const getAllDoctors = () => async (dispatch) => {
       if (!refreshToken) {
         dispatch({
           type: "GET_DOCTORS_FAIL",
-          FAL: { message: "Không có refresh token" },
+          payload: { message: "Không có refresh token" },
         });
         localStorage.clear();
         toast.error("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại!");
@@ -533,6 +535,7 @@ export const updatePaymentStatus = (paymentId, status) => async (dispatch) => {
     throw error;
   }
 };
+
 export const updatePatient = (id, patientData) => async (dispatch) => {
   try {
     const token = localStorage.getItem("access_token");
@@ -554,10 +557,11 @@ export const updatePatient = (id, patientData) => async (dispatch) => {
     throw error;
   }
 };
-// actions.js
+
 export const getHealthInsurances = (patientId) => async (dispatch) => {
   try {
     const token = localStorage.getItem("access_token");
+    if (!token) throw new Error("Không có token để xác thực");
     const res = await axios.get(
       `${API_GATEWAY_URL}/health-insurance/?patient_id=${patientId}`,
       {
@@ -566,16 +570,77 @@ export const getHealthInsurances = (patientId) => async (dispatch) => {
     );
     dispatch({ type: "GET_INSURANCES_SUCCESS", payload: res.data });
   } catch (error) {
-    dispatch({
-      type: "GET_INSURANCES_FAIL",
-      payload: error.response?.data || { message: "Không lấy được bảo hiểm" },
-    });
+    if (error.response?.status === 401) {
+      const refreshToken = localStorage.getItem("refresh_token");
+      if (!refreshToken) {
+        dispatch({
+          type: "GET_INSURANCES_FAIL",
+          payload: { message: "Không có refresh token" },
+        });
+        localStorage.clear();
+        toast.error("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại!");
+        return;
+      }
+
+      if (!isRefreshing) {
+        isRefreshing = true;
+        try {
+          const refreshRes = await axios.post(
+            `${API_GATEWAY_URL}/token/refresh/`,
+            { refresh: refreshToken }
+          );
+          if (refreshRes && refreshRes.data && refreshRes.data.access) {
+            localStorage.setItem("access_token", refreshRes.data.access);
+            if (refreshRes.data.refresh) {
+              localStorage.setItem("refresh_token", refreshRes.data.refresh);
+            }
+            onRefreshed(refreshRes.data.access);
+            const retryRes = await axios.get(
+              `${API_GATEWAY_URL}/health-insurance/?patient_id=${patientId}`,
+              {
+                headers: { Authorization: `Bearer ${refreshRes.data.access}` },
+              }
+            );
+            dispatch({ type: "GET_INSURANCES_SUCCESS", payload: retryRes.data });
+          } else {
+            throw new Error("Không thể làm mới token");
+          }
+        } catch (refreshError) {
+          dispatch({
+            type: "GET_INSURANCES_FAIL",
+            payload:
+              refreshError.response?.data || { message: "Lỗi làm mới token" },
+          });
+          localStorage.clear();
+          toast.error("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại!");
+        } finally {
+          isRefreshing = false;
+        }
+      } else {
+        const newToken = await new Promise((resolve) => {
+          addRefreshSubscriber(resolve);
+        });
+        const retryRes = await axios.get(
+          `${API_GATEWAY_URL}/health-insurance/?patient_id=${patientId}`,
+          {
+            headers: { Authorization: `Bearer ${newToken}` },
+          }
+        );
+        dispatch({ type: "GET_INSURANCES_SUCCESS", payload: retryRes.data });
+      }
+    } else {
+      dispatch({
+        type: "GET_INSURANCES_FAIL",
+        payload: error.response?.data || { message: "Không lấy được bảo hiểm" },
+      });
+    }
   }
 };
 
 export const createHealthInsurance = (insuranceData) => async (dispatch) => {
   try {
     const token = localStorage.getItem("access_token");
+    if (!token) throw new Error("Không có token để xác thực");
     const res = await axios.post(
       `${API_GATEWAY_URL}/health-insurance/`,
       insuranceData,
@@ -597,6 +662,7 @@ export const createHealthInsurance = (insuranceData) => async (dispatch) => {
 export const updateHealthInsurance = (id, insuranceData) => async (dispatch) => {
   try {
     const token = localStorage.getItem("access_token");
+    if (!token) throw new Error("Không có token để xác thực");
     const res = await axios.put(
       `${API_GATEWAY_URL}/health-insurance/${id}/`,
       insuranceData,
@@ -618,6 +684,7 @@ export const updateHealthInsurance = (id, insuranceData) => async (dispatch) => 
 export const deleteHealthInsurance = (id) => async (dispatch) => {
   try {
     const token = localStorage.getItem("access_token");
+    if (!token) throw new Error("Không có token để xác thực");
     await axios.delete(`${API_GATEWAY_URL}/health-insurance/${id}/`, {
       headers: { Authorization: `Bearer ${token}` },
     });

@@ -2,7 +2,6 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 import requests
-from jose import JWTError, jwt
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -19,10 +18,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-SECRET_KEY = "django-insecure-m=5&!qfz1@yf&(3=xp-ce4lqo=w%9iey1@k-+$a0tr-l&0^2m%"
-ALGORITHM = "HS256"
-
 SERVICES = {
+    "auth": "http://localhost:8007/api/auth",
     "patient": "http://localhost:8000/api/patient",
     "doctor": "http://localhost:8001/api/doctor",
     "administration": "http://localhost:8002/api/admin",
@@ -35,17 +32,12 @@ SERVICES = {
 async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("user_id")
-        if not user_id:
-            raise HTTPException(status_code=401, detail="No user_id in token")
-        return payload
-    except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        response = requests.post(f"{SERVICES['auth']}/verify-token/", json={"token": token})
+        if response.status_code == 200 and response.json().get("valid"):
+            return response.json()
+        raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=str(e))
 
 def forward_request(service_name: str, endpoint: str, method: str, data=None, headers=None, payload=None):
     service_url = SERVICES.get(service_name)
@@ -79,14 +71,23 @@ def forward_request(service_name: str, endpoint: str, method: str, data=None, he
         logger.error(f"Error forwarding request to {url}: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
+# Auth Service
+@app.post("/auth/login/")
+async def auth_login(data: dict):
+    return forward_request("auth", "login", "POST", data=data)
+
+@app.post("/auth/register/")
+async def auth_register(data: dict):
+    return forward_request("auth", "register", "POST", data=data)
+
 # Patient Service
 @app.post("/patient/login/")
 async def patient_login(data: dict):
-    return forward_request("patient", "login", "POST", data=data)
+    return forward_request("auth", "login", "POST", data=data)
 
 @app.post("/patient/register/")
 async def patient_register(data: dict):
-    return forward_request("patient", "register", "POST", data=data)
+    return forward_request("auth", "register", "POST", data=data)
 
 @app.post("/patient/token/refresh/")
 async def patient_token_refresh(data: dict):
@@ -106,8 +107,6 @@ async def patient_get(endpoint: str, credentials: HTTPAuthorizationCredentials =
 
 @app.post("/patient/{endpoint:path}")
 async def patient_post(endpoint: str, data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    if endpoint in ["login", "register", "token/refresh"]:
-        raise HTTPException(status_code=400, detail="Use specific login/register/token-refresh endpoint")
     payload = await verify_token(credentials)
     headers = {"Authorization": f"Bearer {credentials.credentials}"}
     return forward_request("patient", endpoint, "POST", data=data, headers=headers, payload=payload)
@@ -127,11 +126,11 @@ async def patient_delete(endpoint: str, credentials: HTTPAuthorizationCredential
 # Doctor Service
 @app.post("/doctor/login/")
 async def doctor_login(data: dict):
-    return forward_request("doctor", "login", "POST", data=data)
+    return forward_request("auth", "login", "POST", data=data)
 
 @app.post("/doctor/register/")
 async def doctor_register(data: dict):
-    return forward_request("doctor", "register", "POST", data=data)
+    return forward_request("auth", "register", "POST", data=data)
 
 @app.post("/doctor/token/refresh/")
 async def doctor_token_refresh(data: dict):
@@ -151,8 +150,6 @@ async def doctor_get(endpoint: str, credentials: HTTPAuthorizationCredentials = 
 
 @app.post("/doctor/{endpoint:path}")
 async def doctor_post(endpoint: str, data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    if endpoint in ["login", "register", "token/refresh"]:
-        raise HTTPException(status_code=400, detail="Use specific login/register/token-refresh endpoint")
     payload = await verify_token(credentials)
     headers = {"Authorization": f"Bearer {credentials.credentials}"}
     return forward_request("doctor", endpoint, "POST", data=data, headers=headers, payload=payload)
@@ -172,11 +169,11 @@ async def doctor_delete(endpoint: str, credentials: HTTPAuthorizationCredentials
 # Administration Service
 @app.post("/administration/login/")
 async def administration_login(data: dict):
-    return forward_request("administration", "login", "POST", data=data)
+    return forward_request("auth", "login", "POST", data=data)
 
 @app.post("/administration/register/")
 async def administration_register(data: dict):
-    return forward_request("administration", "register", "POST", data=data)
+    return forward_request("auth", "register", "POST", data=data)
 
 @app.post("/administration/token/refresh/")
 async def administration_token_refresh(data: dict):
@@ -196,8 +193,6 @@ async def administration_get(endpoint: str, credentials: HTTPAuthorizationCreden
 
 @app.post("/administration/{endpoint:path}")
 async def administration_post(endpoint: str, data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    if endpoint in ["login", "register", "token/refresh"]:
-        raise HTTPException(status_code=400, detail="Use specific login/register/token-refresh endpoint")
     payload = await verify_token(credentials)
     headers = {"Authorization": f"Bearer {credentials.credentials}"}
     return forward_request("administration", endpoint, "POST", data=data, headers=headers, payload=payload)
@@ -217,11 +212,11 @@ async def administration_delete(endpoint: str, credentials: HTTPAuthorizationCre
 # Staff Service
 @app.post("/staff/login/")
 async def staff_login(data: dict):
-    return forward_request("staff", "login", "POST", data=data)
+    return forward_request("auth", "login", "POST", data=data)
 
 @app.post("/staff/register/")
 async def staff_register(data: dict):
-    return forward_request("staff", "register", "POST", data=data)
+    return forward_request("auth", "register", "POST", data=data)
 
 @app.post("/staff/token/refresh/")
 async def staff_token_refresh(data: dict):
@@ -241,11 +236,9 @@ async def staff_get(endpoint: str, credentials: HTTPAuthorizationCredentials = D
 
 @app.post("/staff/{endpoint:path}")
 async def staff_post(endpoint: str, data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    if endpoint in ["login", "register", "token/refresh"]:
-        raise HTTPException(status_code=400, detail="Use specific login/register/token-refresh endpoint")
     payload = await verify_token(credentials)
     headers = {"Authorization": f"Bearer {credentials.credentials}"}
-    return forward_request("staff", endpoint, "POST", data=data, headers=headers, payload=payload)
+    return forward_request("staff", "endpoint", "POST", data=data, headers=headers, payload=payload)
 
 @app.put("/staff/{endpoint:path}")
 async def staff_put(endpoint: str, data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
