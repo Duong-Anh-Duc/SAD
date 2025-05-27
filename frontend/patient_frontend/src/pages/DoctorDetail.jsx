@@ -3,8 +3,8 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
+import { getDoctorDetail } from "../../../doctor_frontend/src/redux/actions";
 import useAuth from "../hooks/useAuth";
-import { getDoctorDetail } from "../redux/actions";
 
 const Container = styled.div`
   max-width: 1000px;

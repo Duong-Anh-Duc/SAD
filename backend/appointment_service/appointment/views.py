@@ -1,15 +1,26 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 from .models import Appointment
 from .serializers import AppointmentSerializer
 from django.db.models import Q
 from datetime import datetime
+from rest_framework import status
+from fastapi import HTTPException
+
+def get_user_id(request):
+    user_id = request.headers.get("X-User-ID")
+    if not user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User ID not provided")
+    try:
+        return int(user_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid User ID format")
 
 class AppointmentCreateView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def post(self, request):
+        user_id = get_user_id(request)
+        if request.data.get('patient_id') != user_id:
+            return Response({"message": "Không có quyền tạo cuộc hẹn"}, status=403)
         serializer = AppointmentSerializer(data=request.data)
         try:
             if serializer.is_valid(raise_exception=True):
@@ -19,11 +30,12 @@ class AppointmentCreateView(APIView):
             return Response({"message": "Tạo cuộc hẹn thất bại", "errors": serializer.errors}, status=400)
 
 class AppointmentProcessView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def put(self, request, pk):
+        user_id = get_user_id(request)
         try:
             appointment = Appointment.objects.get(pk=pk)
+            if appointment.patient_id != user_id:
+                return Response({"message": "Không có quyền cập nhật"}, status=403)
             serializer = AppointmentSerializer(appointment, data=request.data, partial=True)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
@@ -34,14 +46,13 @@ class AppointmentProcessView(APIView):
             return Response({"message": "Cập nhật cuộc hẹn thất bại", "errors": serializer.errors}, status=400)
 
 class AppointmentListView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def get(self, request):
-        trang_thai = request.query_params.get('trang_thai', None)
-        ngay_kham = request.query_params.get('ngay_kham', None)
-        sort_by = request.query_params.get('sort_by', 'ngay_kham')  # Mặc định sắp xếp theo ngày khám
+        user_id = get_user_id(request)
+        trang_thai = request.query_params.get('trang_thai')
+        ngay_kham = request.query_params.get('ngay_kham')
+        sort_by = request.query_params.get('sort_by', 'ngay_kham')
 
-        appointments = Appointment.objects.all()
+        appointments = Appointment.objects.filter(patient_id=user_id)
         if trang_thai:
             appointments = appointments.filter(trang_thai=trang_thai)
         if ngay_kham:
@@ -56,14 +67,13 @@ class AppointmentListView(APIView):
         return Response(serializer.data, status=200)
 
 class AppointmentByDoctorView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def get(self, request, doctor_id):
-        trang_thai = request.query_params.get('trang_thai', None)
-        ngay_kham = request.query_params.get('ngay_kham', None)
+        user_id = get_user_id(request)
+        trang_thai = request.query_params.get('trang_thai')
+        ngay_kham = request.query_params.get('ngay_kham')
         sort_by = request.query_params.get('sort_by', 'ngay_kham')
 
-        appointments = Appointment.objects.filter(doctor_id=doctor_id)
+        appointments = Appointment.objects.filter(doctor_id=doctor_id, patient_id=user_id)
         if trang_thai:
             appointments = appointments.filter(trang_thai=trang_thai)
         if ngay_kham:
@@ -78,11 +88,10 @@ class AppointmentByDoctorView(APIView):
         return Response(serializer.data, status=200)
 
 class AppointmentDetailView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def get(self, request, pk):
+        user_id = get_user_id(request)
         try:
-            appointment = Appointment.objects.get(pk=pk)
+            appointment = Appointment.objects.get(pk=pk, patient_id=user_id)
             serializer = AppointmentSerializer(appointment)
             return Response(serializer.data, status=200)
         except Appointment.DoesNotExist:

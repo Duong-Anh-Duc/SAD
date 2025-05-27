@@ -1,0 +1,31 @@
+# requirements.txt cho Django Service
+django==5.1.6
+djangorestframework==3.15.2
+djangorestframework-simplejwt==5.3.1
+django-cors-headers==4.4.0
+psycopg2-binary==2.9.9
+bcrypt==4.2.0
+python-dotenv==1.0.1
+# requirements.txt cho FastAPI Gateway
+fastapi==0.115.0
+uvicorn==0.30.6
+python-jose[cryptography]==3.3.0
+requests==2.32.3
+python-multipart==0.0.9
+fastapi-security==0.6.1
+# patient_service (cổng 8000)
+cd patient_service && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python manage.py migrate && python manage.py runserver 8000 & \
+# doctor_service (cổng 8001)
+cd ../doctor_service && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python manage.py migrate && python manage.py runserver 8001 & \
+# administration_service (cổng 8002)
+cd ../administration_service && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python manage.py migrate && python manage.py runserver 8002 & \
+# staff_service (cổng 8003)
+cd ../staff_service && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python manage.py migrate && python manage.py runserver 8003 & \
+# appointment_service (cổng 8004)
+cd ../appointment_service && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python manage.py migrate && python manage.py runserver 8004 & \
+# clinic-report_service (cổng 8005)
+cd ../clinic-report_service && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python manage.py migrate && python manage.py runserver 8005 & \
+# payment_service (cổng 8006)
+cd ../payment_service && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python manage.py migrate && python manage.py runserver 8006 & \
+# FastAPI Gateway (cổng 8080)
+cd ../api_gateway && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8080 --reload

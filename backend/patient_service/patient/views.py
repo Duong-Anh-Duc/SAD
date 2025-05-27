@@ -6,6 +6,17 @@ from .serializers import PatientSerializer, HealthInsuranceSerializer, PatientUp
 import bcrypt
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework import status
+from fastapi import HTTPException  # Thêm import này
+
+def get_user_id(request):
+    user_id = request.headers.get("X-User-ID")
+    if not user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User ID not provided")
+    try:
+        return int(user_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid User ID format")
 
 class RegisterPatientView(APIView):
     permission_classes = [AllowAny]
@@ -59,6 +70,9 @@ class GetPatientDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
+        user_id = get_user_id(request)
+        if user_id != pk:
+            return Response({"message": "Không có quyền truy cập"}, status=403)
         try:
             patient = Patient.objects.get(pk=pk)
             serializer = PatientSerializer(patient)
@@ -88,17 +102,23 @@ class CustomTokenRefreshView(TokenRefreshView):
             return Response({"message": str(e)}, status=400)
 
 class HealthInsuranceListCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        user_id = get_user_id(request)
         patient_id = request.query_params.get('patient_id')
         if not patient_id:
             return Response({"message": "Vui lòng cung cấp patient_id"}, status=400)
+        if int(patient_id) != user_id:
+            return Response({"message": "Không có quyền truy cập"}, status=403)
         insurances = HealthInsurance.objects.filter(patient_id=patient_id)
         serializer = HealthInsuranceSerializer(insurances, many=True)
         return Response(serializer.data, status=200)
 
     def post(self, request):
+        user_id = get_user_id(request)
+        if int(request.data.get('patient_id')) != user_id:
+            return Response({"message": "Không có quyền thêm bảo hiểm"}, status=403)
         serializer = HealthInsuranceSerializer(data=request.data)
         try:
             if serializer.is_valid(raise_exception=True):
@@ -111,16 +131,22 @@ class HealthInsuranceDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
+        user_id = get_user_id(request)
         try:
             insurance = HealthInsurance.objects.get(pk=pk)
+            if insurance.patient_id != user_id:
+                return Response({"message": "Không có quyền truy cập"}, status=403)
             serializer = HealthInsuranceSerializer(insurance)
             return Response(serializer.data, status=200)
         except HealthInsurance.DoesNotExist:
             return Response({"message": "Bảo hiểm không tồn tại"}, status=404)
 
     def put(self, request, pk):
+        user_id = get_user_id(request)
         try:
             insurance = HealthInsurance.objects.get(pk=pk)
+            if insurance.patient_id != user_id:
+                return Response({"message": "Không có quyền cập nhật"}, status=403)
             serializer = HealthInsuranceSerializer(insurance, data=request.data, partial=True)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
@@ -131,19 +157,25 @@ class HealthInsuranceDetailView(APIView):
             return Response({"message": "Cập nhật bảo hiểm thất bại", "errors": serializer.errors}, status=400)
 
     def delete(self, request, pk):
+        user_id = get_user_id(request)
         try:
             insurance = HealthInsurance.objects.get(pk=pk)
+            if insurance.patient_id != user_id:
+                return Response({"message": "Không có quyền xóa"}, status=403)
             insurance.delete()
             return Response({"message": "Xóa bảo hiểm thành công"}, status=204)
         except HealthInsurance.DoesNotExist:
             return Response({"message": "Bảo hiểm không tồn tại"}, status=404)
-# patient/views.py
+
 class UpdatePatientView(APIView):
     permission_classes = [IsAuthenticated]
 
     def put(self, request, pk):
+        user_id = get_user_id(request)
+        if user_id != pk:
+            return Response({"message": "Không có quyền cập nhật"}, status=403)
         try:
-            patient = Patient.objects.get(pk=pk, user=request.user)
+            patient = Patient.objects.get(pk=pk)
             serializer = PatientUpdateSerializer(patient, data=request.data, partial=True)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()

@@ -630,18 +630,3 @@ export const deleteHealthInsurance = (id) => async (dispatch) => {
     throw error;
   }
 };
-// actions.js
-export const getDoctorDetail = (id) => async (dispatch) => {
-  try {
-    const token = localStorage.getItem("access_token");
-    const res = await axios.get(`${DOCTOR_API_GATEWAY_URL}/detail/${id}/`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    dispatch({ type: "GET_DOCTOR_DETAIL_SUCCESS", payload: res.data });
-  } catch (error) {
-    dispatch({
-      type: "GET_DOCTOR_DETAIL_FAIL",
-      payload: error.response?.data || { message: "Không lấy được thông tin bác sĩ" },
-    });
-  }
-};
