@@ -91,7 +91,7 @@ async def patient_register(data: dict):
 
 @app.post("/patient/token/refresh/")
 async def patient_token_refresh(data: dict):
-    return forward_request("patient", "token/refresh", "POST", data=data)
+    return forward_request("auth", "token/refresh", "POST", data=data)
 
 @app.post("/patient/logout/")
 async def patient_logout(data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):

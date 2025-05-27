@@ -7,6 +7,7 @@ import bcrypt
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework import status
+from django.contrib.auth.models import User
 
 def get_user_id(request):
     user_id = request.headers.get("X-User-ID")
@@ -18,7 +19,18 @@ class RegisterPatientView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = PatientSerializer(data=request.data)
+        username = request.data.get('username')
+        email = request.data.get('email')
+        password = request.data.get('password') or request.data.get('mat_khau')
+        # Tạo user Django nếu chưa có
+        if not User.objects.filter(username=username).exists():
+            user = User.objects.create_user(username=username, email=email, password=password)
+        else:
+            user = User.objects.get(username=username)
+        # Sau đó tạo Patient, gán user=user
+        data = request.data.copy()
+        data['user'] = user.id
+        serializer = PatientSerializer(data=data)
         try:
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
@@ -66,8 +78,7 @@ class GetPatientDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
-        user_id = get_user_id(request)
-        if user_id != pk:
+        if request.user.id != int(pk):
             return Response({"message": "Không có quyền truy cập"}, status=403)
         try:
             patient = Patient.objects.get(pk=pk)

@@ -42,68 +42,57 @@ export const restoreSession = () => async (dispatch) => {
         return;
       }
 
-      if (!isRefreshing) {
-        isRefreshing = true;
-        try {
-          const refreshRes = await axios.post(
-            `${API_GATEWAY_URL}/token/refresh/`,
-            { refresh: refreshToken }
-          );
-          if (refreshRes && refreshRes.data && refreshRes.data.access) {
-            localStorage.setItem("access_token", refreshRes.data.access);
-            if (refreshRes.data.refresh) {
-              localStorage.setItem("refresh_token", refreshRes.data.refresh);
-            }
-            onRefreshed(refreshRes.data.access);
-            const retryRes = await axios.get(
-              `${API_GATEWAY_URL}/detail/${patientId}/`,
-              {
-                headers: { Authorization: `Bearer ${refreshRes.data.access}` },
-              }
-            );
-            dispatch({
-              type: "LOGIN_SUCCESS",
-              payload: {
-                access_token: refreshRes.data.access,
-                patient_id: patientId,
-                ...retryRes.data,
-              },
-            });
-          } else {
-            throw new Error("Không thể làm mới token");
-          }
-        } catch (refreshError) {
-          dispatch({ type: "LOGOUT_SUCCESS" });
-          localStorage.clear();
-          toast.error("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại!");
-        } finally {
-          isRefreshing = false;
-        }
-      } else {
-        const newToken = await new Promise((resolve) => {
-          addRefreshSubscriber(resolve);
-        });
-        const retryRes = await axios.get(
-          `${API_GATEWAY_URL}/detail/${patientId}/`,
-          {
-            headers: { Authorization: `Bearer ${newToken}` },
-          }
+      try {
+        const refreshRes = await axios.post(
+          `${AUTH_API_GATEWAY_URL}/token/refresh/`,
+          { refresh: refreshToken }
         );
-        dispatch({
-          type: "LOGIN_SUCCESS",
-          payload: { access_token: newToken, patient_id: patientId, ...retryRes.data },
-        });
+        if (refreshRes && refreshRes.data && refreshRes.data.access) {
+          localStorage.setItem("access_token", refreshRes.data.access);
+          if (refreshRes.data.refresh) {
+            localStorage.setItem("refresh_token", refreshRes.data.refresh);
+          }
+          const retryRes = await axios.get(
+            `${API_GATEWAY_URL}/detail/${patientId}/`,
+            {
+              headers: { Authorization: `Bearer ${refreshRes.data.access}` },
+            }
+          );
+          dispatch({
+            type: "LOGIN_SUCCESS",
+            payload: {
+              access_token: refreshRes.data.access,
+              patient_id: patientId,
+              ...retryRes.data,
+            },
+          });
+        } else {
+          throw new Error("Không thể làm mới token");
+        }
+      } catch (refreshError) {
+        dispatch({ type: "LOGOUT_SUCCESS" });
+        localStorage.clear();
+        toast.error("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại!");
       }
     } else {
       dispatch({ type: "LOGOUT_SUCCESS" });
       localStorage.clear();
+      console.error("Restore session error:", error.response?.data || error.message);
     }
   }
 };
 
 export const registerPatient = (patientData) => async (dispatch) => {
   try {
-    const res = await axios.post(`${AUTH_API_GATEWAY_URL}/register/`, patientData);
+    const dataToSend = {
+      username: patientData.email.split('@')[0],  // Tạo username từ email
+      password: patientData.mat_khau,
+      email: patientData.email,
+      role: "patient",  // Thêm role
+    };
+    console.log("Register data:", dataToSend);  // Debug dữ liệu gửi đi
+    const res = await axios.post(`${AUTH_API_GATEWAY_URL}/register/`, dataToSend);
+    console.log(res)
     if (res && res.status === 201) {
       dispatch({ type: "REGISTER_SUCCESS", payload: res.data });
     } else {
@@ -120,21 +109,30 @@ export const registerPatient = (patientData) => async (dispatch) => {
 
 export const loginPatient = (credentials) => async (dispatch) => {
   try {
-    credentials.role = "patient";  // Thêm role vào payload
-    const res = await axios.post(`${AUTH_API_GATEWAY_URL}/login/`, credentials);
+    const dataToSend = {
+      username: credentials.email.split('@')[0],  // Tạo username từ email
+      password: credentials.mat_khau,  // Sử dụng mat_khau làm password
+      role: "patient",  // Đảm bảo có role
+    };
+    console.log("Login data sent:", dataToSend);  // Debug dữ liệu gửi
+    const res = await axios.post(`${AUTH_API_GATEWAY_URL}/login/`, dataToSend);
+    console.log("Login response:", res);  // Debug phản hồi
     if (res && res.data && res.status === 200) {
       dispatch({ type: "LOGIN_SUCCESS", payload: res.data });
       localStorage.setItem("access_token", res.data.access_token || "");
       localStorage.setItem("refresh_token", res.data.refresh_token || "");
       localStorage.setItem("patient_id", res.data.user_id || "");
+      toast.success("Đăng nhập thành công!");
     } else {
       throw new Error(res.data?.message || "Phản hồi từ API không hợp lệ");
     }
   } catch (error) {
+    console.error("Login error:", error.response?.data || error.message);
     dispatch({
       type: "LOGIN_FAIL",
       payload: error.response?.data || { message: "Đăng nhập thất bại" },
     });
+    toast.error(error.response?.data?.message || "Đăng nhập thất bại");
     throw error;
   }
 };

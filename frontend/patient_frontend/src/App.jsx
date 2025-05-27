@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import styled from "styled-components";
 import ManageHealthInsurance from "./components/ManageHealthInsurance";
@@ -10,6 +12,7 @@ import PatientDetail from "./pages/PatientDetail";
 import PatientLogin from "./pages/PatientLogin";
 import PatientRegister from "./pages/PatientRegister";
 import PaymentList from "./pages/PaymentList";
+import { restoreSession } from "./redux/actions";
 
 const AppContainer = styled.div`
   background: linear-gradient(135deg, #f8f9fa 0%, #e6f4ea 100%);
@@ -17,6 +20,12 @@ const AppContainer = styled.div`
 `;
 
 const App = () => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(restoreSession());
+  }, [dispatch]);
+
   return (
     <Router>
       <AppContainer>
