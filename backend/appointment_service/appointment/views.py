@@ -1,13 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+# from rest_framework.permissions import IsAuthenticated
 from .models import Appointment
 from .serializers import AppointmentSerializer
 from django.db.models import Q
 from datetime import datetime
 
 class AppointmentCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = AppointmentSerializer(data=request.data)
@@ -19,7 +19,7 @@ class AppointmentCreateView(APIView):
             return Response({"message": "Tạo cuộc hẹn thất bại", "errors": serializer.errors}, status=400)
 
 class AppointmentProcessView(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def put(self, request, pk):
         try:
@@ -34,7 +34,7 @@ class AppointmentProcessView(APIView):
             return Response({"message": "Cập nhật cuộc hẹn thất bại", "errors": serializer.errors}, status=400)
 
 class AppointmentListView(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def get(self, request):
         trang_thai = request.query_params.get('trang_thai', None)
@@ -56,7 +56,7 @@ class AppointmentListView(APIView):
         return Response(serializer.data, status=200)
 
 class AppointmentByDoctorView(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def get(self, request, doctor_id):
         trang_thai = request.query_params.get('trang_thai', None)
@@ -78,7 +78,7 @@ class AppointmentByDoctorView(APIView):
         return Response(serializer.data, status=200)
 
 class AppointmentDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
         try:

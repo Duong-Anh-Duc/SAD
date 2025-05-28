@@ -96,9 +96,7 @@ export const getDoctorDetail = (id) => async (dispatch) => {
     const res = await axios.get(`${API_GATEWAY_URL}/detail/${id}/`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    const appointmentsRes = await axios.get(`${APPOINTMENT_API_GATEWAY_URL}/doctor/${id}/`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const appointmentsRes = await axios.get(`${APPOINTMENT_API_GATEWAY_URL}/doctor/${id}/`);
     dispatch({ type: 'GET_DETAIL_SUCCESS', payload: { ...res.data, appointments: appointmentsRes.data } });
   } catch (error) {
     if (error.response?.status === 401) {
@@ -110,9 +108,7 @@ export const getDoctorDetail = (id) => async (dispatch) => {
           const retryRes = await axios.get(`${API_GATEWAY_URL}/detail/${id}/`, {
             headers: { Authorization: `Bearer ${refreshRes.data.access}` }
           });
-          const appointmentsRetryRes = await axios.get(`${APPOINTMENT_API_GATEWAY_URL}/doctor/${id}/`, {
-            headers: { Authorization: `Bearer ${refreshRes.data.access}` }
-          });
+          const appointmentsRetryRes = await axios.get(`${APPOINTMENT_API_GATEWAY_URL}/doctor/${id}/`);
           dispatch({ type: 'GET_DETAIL_SUCCESS', payload: { ...retryRes.data, appointments: appointmentsRetryRes.data } });
         } else {
           throw new Error('Không thể làm mới token');
@@ -165,9 +161,7 @@ export const confirmAppointment = (id, data) => async (dispatch) => {
   try {
     const token = localStorage.getItem('access_token');
     if (!token) throw new Error('Không có token để xác thực');
-    const res = await axios.put(`${APPOINTMENT_API_GATEWAY_URL}/${id}/process/`, data, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const res = await axios.put(`${APPOINTMENT_API_GATEWAY_URL}/${id}/process/`, data);
     if (res && res.status === 200) {
       dispatch({ type: 'CONFIRM_APPOINTMENT_SUCCESS', payload: res.data });
       return res.data;

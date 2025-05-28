@@ -103,7 +103,7 @@ export const restoreSession = () => async (dispatch) => {
 export const registerPatient = (patientData) => async (dispatch) => {
   try {
     const res = await axios.post(`${API_GATEWAY_URL}/register/`, patientData);
-    if (res && res.status === 201) {
+    if (res && res.status === 200) {
       dispatch({ type: "REGISTER_SUCCESS", payload: res.data });
     } else {
       throw new Error(res.data?.message || "Đăng ký thất bại");
@@ -311,11 +311,8 @@ export const createAppointment = (appointmentData) => async (dispatch) => {
     const res = await axios.post(
       `${APPOINTMENT_API_GATEWAY_URL}/create/`,
       appointmentData,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
     );
-    if (res && res.status === 201) {
+    if (res && res.status === 200) {
       dispatch({ type: "CREATE_APPOINTMENT_SUCCESS", payload: res.data });
       return res.data;
     } else {
@@ -337,9 +334,6 @@ export const cancelAppointment = (appointmentId) => async (dispatch) => {
     const res = await axios.put(
       `${APPOINTMENT_API_GATEWAY_URL}/${appointmentId}/process/`,
       { trang_thai: "da_huy" },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
     );
     if (res && res.status === 200) {
       dispatch({ type: "CANCEL_APPOINTMENT_SUCCESS", payload: appointmentId });

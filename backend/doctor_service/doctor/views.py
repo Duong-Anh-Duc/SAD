@@ -42,7 +42,6 @@ class LoginDoctorView(APIView):
             return Response({"message": "Email không tồn tại"}, status=401)
 
 class LogoutDoctorView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         try:
@@ -56,7 +55,6 @@ class LogoutDoctorView(APIView):
             return Response({"message": f"Đăng xuất thất bại: {str(e)}"}, status=400)
 
 class GetDoctorDetailView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
         try:
@@ -67,7 +65,6 @@ class GetDoctorDetailView(APIView):
             return Response({"message": "Bác sĩ không tồn tại"}, status=404)
 
 class GetAllDoctorsView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         doctors = Doctor.objects.all()

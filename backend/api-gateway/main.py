@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 import requests
@@ -148,7 +148,6 @@ async def doctor_logout(data: dict, credentials: HTTPAuthorizationCredentials = 
 
 @app.get("/doctor/{endpoint:path}")
 async def doctor_get(endpoint: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    await verify_token(credentials)
     headers = {"Authorization": f"Bearer {credentials.credentials}"}
     return forward_request("doctor", endpoint, "GET", headers=headers)
 
@@ -156,19 +155,16 @@ async def doctor_get(endpoint: str, credentials: HTTPAuthorizationCredentials = 
 async def doctor_post(endpoint: str, data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
     if endpoint in ["login", "register", "token/refresh"]:
         raise HTTPException(status_code=400, detail="Use specific login/register/token-refresh endpoint")
-    await verify_token(credentials)
     headers = {"Authorization": f"Bearer {credentials.credentials}"}
     return forward_request("doctor", endpoint, "POST", data=data, headers=headers)
 
 @app.put("/doctor/{endpoint:path}")
 async def doctor_put(endpoint: str, data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    await verify_token(credentials)
     headers = {"Authorization": f"Bearer {credentials.credentials}"}
     return forward_request("doctor", endpoint, "PUT", data=data, headers=headers)
 
 @app.delete("/doctor/{endpoint:path}")
 async def doctor_delete(endpoint: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    await verify_token(credentials)
     headers = {"Authorization": f"Bearer {credentials.credentials}"}
     return forward_request("doctor", endpoint, "DELETE", headers=headers)
 
@@ -264,27 +260,36 @@ async def staff_delete(endpoint: str, credentials: HTTPAuthorizationCredentials 
 
 # Định tuyến cho Appointment Service
 @app.get("/appointment/{endpoint:path}")
-async def appointment_get(endpoint: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    await verify_token(credentials)
-    headers = {"Authorization": f"Bearer {credentials.credentials}"}
+async def appointment_get(endpoint: str, request: Request):
+    # Lấy Authorization header nếu có, không bắt buộc
+    auth_header = request.headers.get("authorization")
+    headers = {}
+    if auth_header:
+        headers["Authorization"] = auth_header
     return forward_request("appointment", endpoint, "GET", headers=headers)
 
 @app.post("/appointment/{endpoint:path}")
-async def appointment_post(endpoint: str, data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    await verify_token(credentials)
-    headers = {"Authorization": f"Bearer {credentials.credentials}"}
+async def appointment_post(endpoint: str, data: dict, request: Request):
+    auth_header = request.headers.get("authorization")
+    headers = {}
+    if auth_header:
+        headers["Authorization"] = auth_header
     return forward_request("appointment", endpoint, "POST", data=data, headers=headers)
 
 @app.put("/appointment/{endpoint:path}")
-async def appointment_put(endpoint: str, data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    await verify_token(credentials)
-    headers = {"Authorization": f"Bearer {credentials.credentials}"}
+async def appointment_put(endpoint: str, data: dict, request: Request):
+    auth_header = request.headers.get("authorization")
+    headers = {}
+    if auth_header:
+        headers["Authorization"] = auth_header
     return forward_request("appointment", endpoint, "PUT", data=data, headers=headers)
 
 @app.delete("/appointment/{endpoint:path}")
-async def appointment_delete(endpoint: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    await verify_token(credentials)
-    headers = {"Authorization": f"Bearer {credentials.credentials}"}
+async def appointment_delete(endpoint: str, request: Request):
+    auth_header = request.headers.get("authorization")
+    headers = {}
+    if auth_header:
+        headers["Authorization"] = auth_header
     return forward_request("appointment", endpoint, "DELETE", headers=headers)
 
 # Định tuyến cho Clinic Report Service
