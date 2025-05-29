@@ -555,7 +555,7 @@ export const getHealthInsurances = (patientId) => async (dispatch) => {
     const res = await axios.get(
       `${API_GATEWAY_URL}/health-insurance/?patient_id=${patientId}`,
       {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, 'X-Patient-ID': patientId, },
       }
     );
     dispatch({ type: "GET_INSURANCES_SUCCESS", payload: res.data });

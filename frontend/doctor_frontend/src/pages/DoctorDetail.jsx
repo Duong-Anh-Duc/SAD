@@ -116,7 +116,7 @@ const StyledTable = styled(Table)`
 
 const DoctorDetail = () => {
   const dispatch = useDispatch();
-  const doctorData = useSelector((state) => state.doctor.doctor);
+  const doctorData = useSelector((state) => state.doctor); // Sửa: Lấy state.doctor
   const doctors = useSelector((state) => state.doctor.doctors);
   const error = useSelector((state) => state.doctor.error);
   const navigate = useNavigate();
@@ -169,7 +169,7 @@ const DoctorDetail = () => {
           pauseOnHover: true,
           draggable: true,
         });
-        dispatch(getDoctorDetail(doctorData.doctor.id));
+        dispatch(getDoctorDetail(doctorData.id));
       })
       .catch(() => {
         toast.error(error?.message || "Xác nhận lịch khám thất bại!", {
@@ -194,36 +194,24 @@ const DoctorDetail = () => {
       const reportData = {
         appointment_id: selectedAppointment.id,
         patient_id: selectedAppointment.patient_id,
-        doctor_id: doctorData.doctor.id,
+        doctor_id: doctorData.id,
         ket_luan: values.ket_luan,
         chan_doan: values.chan_doan,
         dieu_tri: values.dieu_tri,
         ghi_chu: values.ghi_chu,
       };
+      console.log("Sending report data:", reportData);
       await dispatch(createClinicReport(reportData));
-      toast.success("Tạo phiếu kết luận thành công!", {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      toast.success("Tạo phiếu kết luận thành công!");
       setIsReportModalVisible(false);
       reportForm.resetFields();
       await dispatch(
         confirmAppointment(selectedAppointment.id, { trang_thai: "hoan_thanh" })
       );
-      dispatch(getDoctorDetail(doctorData.doctor.id));
+      dispatch(getDoctorDetail(doctorData.id));
     } catch (err) {
-      toast.error(error?.message || "Tạo phiếu kết luận thất bại!", {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      console.error("Error in handleReportOk:", err.message);
+      toast.error(err.message || "Tạo phiếu kết luận thất bại!");
     }
   };
 
@@ -265,9 +253,9 @@ const DoctorDetail = () => {
       </div>
     );
 
-  const doctor = doctorData.doctor || {};
+  const doctor = doctorData || {};
   const appointments = doctorData.appointments || [];
-
+  console.log(doctor);
   return (
     <Container>
       <Title>
@@ -277,22 +265,22 @@ const DoctorDetail = () => {
       {error && <ErrorText>{error.message}</ErrorText>}
       <StyledCard>
         <p>
-          <strong>Tên:</strong> {doctor.ten}
+          <strong>Tên:</strong> {doctor.doctor.ten}
         </p>
         <p>
-          <strong>Email:</strong> {doctor.email}
+          <strong>Email:</strong> {doctor.doctor.email}
         </p>
         <p>
-          <strong>Khoa:</strong> {doctor.khoa}
+          <strong>Khoa:</strong> {doctor.doctor.khoa}
         </p>
         <p>
-          <strong>Chức vụ:</strong> {doctor.chuc_vu}
+          <strong>Chức vụ:</strong> {doctor.doctor.chuc_vu}
         </p>
         <p>
-          <strong>Giới thiệu:</strong> {doctor.gioi_thieu}
+          <strong>Giới thiệu:</strong> {doctor.doctor.gioi_thieu}
         </p>
         <p>
-          <strong>Số điện thoại:</strong> {doctor.so_dt}
+          <strong>Số điện thoại:</strong> {doctor.doctor.so_dt}
         </p>
       </StyledCard>
       <Title>

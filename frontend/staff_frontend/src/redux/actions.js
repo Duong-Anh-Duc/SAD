@@ -22,7 +22,7 @@ export const restoreSession = () => async (dispatch) => {
 export const registerStaff = (staffData) => async (dispatch) => {
   try {
     const res = await axios.post(`${API_GATEWAY_URL}/register/`, staffData);
-    if (res && res.status === 201) {
+    if (res && res.status === 200) {
       dispatch({ type: 'REGISTER_SUCCESS', payload: res.data });
     } else {
       throw new Error(res.data?.message || 'Đăng ký thất bại');

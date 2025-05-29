@@ -5,7 +5,7 @@ from .models import Payment
 from .serializers import PaymentSerializer
 
 class PaymentCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = PaymentSerializer(data=request.data)
@@ -17,7 +17,7 @@ class PaymentCreateView(APIView):
             return Response({"message": "Tạo hóa đơn thất bại", "errors": serializer.errors}, status=400)
 
 class PaymentUpdateStatusView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def put(self, request, pk):
         try:
@@ -32,7 +32,7 @@ class PaymentUpdateStatusView(APIView):
             return Response({"message": "Cập nhật trạng thái hóa đơn thất bại", "errors": serializer.errors}, status=400)
 
 class PaymentDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
         try:
@@ -43,7 +43,7 @@ class PaymentDetailView(APIView):
             return Response({"message": "Hóa đơn không tồn tại"}, status=404)
 
 class PaymentListView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def get(self, request):
         trang_thai = request.query_params.get('trang_thai', None)

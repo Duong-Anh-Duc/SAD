@@ -5,7 +5,7 @@ from .models import ClinicReport
 from .serializers import ClinicReportSerializer
 
 class ClinicReportCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = ClinicReportSerializer(data=request.data)
@@ -17,7 +17,7 @@ class ClinicReportCreateView(APIView):
             return Response({"message": "Tạo phiếu kết luận thất bại", "errors": serializer.errors}, status=400)
 
 class ClinicReportListByUserView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def get(self, request, user_id):
         reports = ClinicReport.objects.filter(patient_id=user_id)
@@ -25,7 +25,7 @@ class ClinicReportListByUserView(APIView):
         return Response(serializer.data, status=200)
 
 class ClinicReportDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
         try:

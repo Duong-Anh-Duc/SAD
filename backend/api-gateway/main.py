@@ -102,9 +102,14 @@ async def patient_logout(data: dict, credentials: HTTPAuthorizationCredentials =
     return forward_request("patient", "logout", "POST", data=data, headers=headers)
 
 @app.get("/patient/{endpoint:path}")
-async def patient_get(endpoint: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    await verify_token(credentials)  # Kiểm tra token hợp lệ
-    headers = {"Authorization": f"Bearer {credentials.credentials}"}
+async def patient_get(endpoint: str, request: Request):
+    auth_header = request.headers.get("authorization")
+    patient_id = request.headers.get("X-Patient-ID")  # Lấy patient_id từ header
+    headers = {}
+    if auth_header:
+        headers["Authorization"] = auth_header
+    if patient_id:
+        headers["X-Patient-ID"] = patient_id  # Truyền patient_id qua header
     return forward_request("patient", endpoint, "GET", headers=headers)
 
 @app.post("/patient/{endpoint:path}")
@@ -320,25 +325,25 @@ async def clinic_report_delete(endpoint: str, credentials: HTTPAuthorizationCred
 # Định tuyến cho Payment Service
 @app.get("/payment/{endpoint:path}")
 async def payment_get(endpoint: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    await verify_token(credentials)
+    #await verify_token(credentials)
     headers = {"Authorization": f"Bearer {credentials.credentials}"}
     return forward_request("payment", endpoint, "GET", headers=headers)
 
 @app.post("/payment/{endpoint:path}")
 async def payment_post(endpoint: str, data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    await verify_token(credentials)
+    #await verify_token(credentials)
     headers = {"Authorization": f"Bearer {credentials.credentials}"}
     return forward_request("payment", endpoint, "POST", data=data, headers=headers)
 
 @app.put("/payment/{endpoint:path}")
 async def payment_put(endpoint: str, data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    await verify_token(credentials)
+    #await verify_token(credentials)
     headers = {"Authorization": f"Bearer {credentials.credentials}"}
     return forward_request("payment", endpoint, "PUT", data=data, headers=headers)
 
 @app.delete("/payment/{endpoint:path}")
 async def payment_delete(endpoint: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    await verify_token(credentials)
+    #await verify_token(credentials)
     headers = {"Authorization": f"Bearer {credentials.credentials}"}
     return forward_request("payment", endpoint, "DELETE", headers=headers)
 

@@ -91,13 +91,21 @@ class HealthInsuranceListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        patient_id = request.query_params.get('patient_id')
+        patient_id = request.headers.get("X-Patient-ID")  # Lấy patient_id từ header
+        print(request.headers)
+        print("Received patient_id:", patient_id)
         if not patient_id:
             return Response({"message": "Vui lòng cung cấp patient_id"}, status=400)
-        insurances = HealthInsurance.objects.filter(patient_id=patient_id)
-        serializer = HealthInsuranceSerializer(insurances, many=True)
-        return Response(serializer.data, status=200)
-
+        try:
+            patient_id = int(patient_id)
+            insurances = HealthInsurance.objects.filter(patient_id=patient_id)
+            serializer = HealthInsuranceSerializer(insurances, many=True)
+            return Response(serializer.data, status=200)
+        except ValueError:
+            return Response({"message": "patient_id phải là số nguyên"}, status=400)
+        except Exception as e:
+            print("Error fetching health insurances:", str(e))
+            return Response({"message": "Không lấy được bảo hiểm", "error": str(e)}, status=400)
     def post(self, request):
         serializer = HealthInsuranceSerializer(data=request.data)
         try:

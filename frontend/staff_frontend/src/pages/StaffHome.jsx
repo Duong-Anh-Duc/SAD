@@ -30,7 +30,6 @@ import {
   updatePatient,
   updatePaymentStatus,
 } from "../redux/actions";
-
 const Container = styled.div`
   max-width: 1200px;
   margin: 40px auto;
