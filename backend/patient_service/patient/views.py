@@ -42,7 +42,7 @@ class LoginPatientView(APIView):
             return Response({"message": "Email không tồn tại"}, status=401)
 
 class LogoutPatientView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def post(self, request):
         try:
@@ -56,7 +56,7 @@ class LogoutPatientView(APIView):
             return Response({"message": f"Đăng xuất thất bại: {str(e)}"}, status=400)
 
 class GetPatientDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
         try:
@@ -72,7 +72,7 @@ class GetPatientDetailView(APIView):
             return Response({"message": "Bệnh nhân không tồn tại"}, status=404)
 
 class GetAllPatientsView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def get(self, request):
         patients = Patient.objects.all()
@@ -88,7 +88,7 @@ class CustomTokenRefreshView(TokenRefreshView):
             return Response({"message": str(e)}, status=400)
 
 class HealthInsuranceListCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def get(self, request):
         patient_id = request.headers.get("X-Patient-ID")  # Lấy patient_id từ header
@@ -116,7 +116,7 @@ class HealthInsuranceListCreateView(APIView):
             return Response({"message": "Thêm bảo hiểm thất bại", "errors": serializer.errors}, status=400)
 
 class HealthInsuranceDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
         try:
@@ -147,7 +147,7 @@ class HealthInsuranceDetailView(APIView):
             return Response({"message": "Bảo hiểm không tồn tại"}, status=404)
 # patient/views.py
 class UpdatePatientView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def put(self, request, pk):
         try:

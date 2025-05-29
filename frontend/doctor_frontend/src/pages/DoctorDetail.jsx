@@ -254,8 +254,7 @@ const DoctorDetail = () => {
     );
 
   const doctor = doctorData || {};
-  const appointments = doctorData.appointments || [];
-  console.log(doctor);
+  const appointments = doctorData.doctor.appointments || [];
   return (
     <Container>
       <Title>

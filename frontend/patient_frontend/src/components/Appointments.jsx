@@ -7,6 +7,7 @@ import {
   Modal,
   Select,
   Table,
+  Tag,
   TimePicker,
 } from "antd";
 import { useEffect, useState } from "react";
@@ -14,7 +15,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import styled from "styled-components";
-import { createAppointment, getAllDoctors } from "../redux/actions";
+import {
+  createAppointment,
+  getAllDoctors,
+  getPatientAppointments,
+} from "../redux/actions";
 import CancelAppointment from "./CancelAppointment";
 
 const { Option } = Select;
@@ -34,6 +39,7 @@ const StyledTable = styled(Table)`
     background: #28a745;
     color: white;
     font-weight: 600;
+    text-align: center;
   }
 
   .ant-table-tbody > tr:hover > td {
@@ -76,17 +82,28 @@ const LinkButton = styled(Button)`
   }
 `;
 
-const Appointments = ({ appointments, patientId, onUpdate }) => {
+const Appointments = ({ patientId, onUpdate }) => {
   const dispatch = useDispatch();
   const doctors = useSelector((state) => state.patient.doctors || []);
+  const allAppointments = useSelector(
+    (state) => state.patient.appointments || []
+  );
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
+
+  // Lọc các cuộc hẹn chưa hoàn thành (khác hoan_thanh)
+  const appointments = allAppointments.filter(
+    (appt) => appt.trang_thai !== "hoan_thanh"
+  );
 
   useEffect(() => {
     dispatch(getAllDoctors()).catch(() => {
       toast.error("Không lấy được danh sách bác sĩ!");
     });
-  }, [dispatch]);
+    dispatch(getPatientAppointments(patientId)).catch(() => {
+      toast.error("Không lấy được danh sách lịch khám!");
+    });
+  }, [dispatch, patientId]);
 
   const showModal = () => setIsModalVisible(true);
 
@@ -105,6 +122,7 @@ const Appointments = ({ appointments, patientId, onUpdate }) => {
       toast.success("Đặt lịch khám thành công!");
       setIsModalVisible(false);
       form.resetFields();
+      dispatch(getPatientAppointments(patientId));
       onUpdate();
     } catch (err) {
       toast.error("Đặt lịch khám thất bại!");
@@ -117,17 +135,68 @@ const Appointments = ({ appointments, patientId, onUpdate }) => {
   };
 
   const columns = [
-    { title: "Bác sĩ ID", dataIndex: "doctor_id", key: "doctor_id" },
-    { title: "Ngày khám", dataIndex: "ngay_kham", key: "ngay_kham" },
-    { title: "Giờ khám", dataIndex: "gio_kham", key: "gio_kham" },
-    { title: "Trạng thái", dataIndex: "trang_thai", key: "trang_thai" },
-    { title: "Mô tả", dataIndex: "mo_ta", key: "mo_ta" },
+    {
+      title: "Bác sĩ ID",
+      dataIndex: "doctor_id",
+      key: "doctor_id",
+      align: "center",
+    },
+    {
+      title: "Ngày khám",
+      dataIndex: "ngay_kham",
+      key: "ngay_kham",
+      align: "center",
+    },
+    {
+      title: "Giờ khám",
+      dataIndex: "gio_kham",
+      key: "gio_kham",
+      align: "center",
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "trang_thai",
+      key: "trang_thai",
+      align: "center",
+      render: (trang_thai) => {
+        let color, displayText;
+        switch (trang_thai) {
+          case "cho_xac_nhan":
+            color = "gold";
+            displayText = "Chờ xác nhận";
+            break;
+          case "da_xac_nhan":
+            color = "blue";
+            displayText = "Đã xác nhận";
+            break;
+          case "hoan_thanh":
+            color = "green";
+            displayText = "Hoàn thành";
+            break;
+          case "da_huy":
+            color = "red";
+            displayText = "Đã hủy";
+            break;
+          default:
+            color = "default";
+            displayText = trang_thai;
+        }
+        return <Tag color={color}>{displayText}</Tag>;
+      },
+    },
+    { title: "Mô tả", dataIndex: "mo_ta", key: "mo_ta", align: "center" },
     {
       title: "Hành động",
       key: "action",
       render: (_, record) =>
         record.trang_thai === "cho_xac_nhan" ? (
-          <CancelAppointment appointmentId={record.id} onSuccess={onUpdate} />
+          <CancelAppointment
+            appointmentId={record.id}
+            onSuccess={() => {
+              dispatch(getPatientAppointments(patientId));
+              onUpdate();
+            }}
+          />
         ) : null,
     },
   ];

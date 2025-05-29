@@ -639,3 +639,26 @@ export const getDoctorDetail = (id) => async (dispatch) => {
     });
   }
 };
+export const getMedicalHistory = (patientId) => async (dispatch) => {
+  try {
+    const res = await axios.get(`${APPOINTMENT_API_GATEWAY_URL}/patient/${patientId}/?trang_thai=hoan_thanh`);
+    dispatch({ type: "GET_MEDICAL_HISTORY_SUCCESS", payload: res.data });
+  } catch (error) {
+    dispatch({
+      type: "GET_MEDICAL_HISTORY_FAIL",
+      payload: error.response?.data || { message: "Không lấy được lịch sử khám bệnh" },
+    });
+  }
+};
+export const getPatientAppointments = (patientId, status = null) => async (dispatch) => {
+  try {
+    const params = status ? `?trang_thai=${status}` : '';
+    const res = await axios.get(`${APPOINTMENT_API_GATEWAY_URL}/patient/${patientId}/${params}`);
+    dispatch({ type: "GET_PATIENT_APPOINTMENTS_SUCCESS", payload: res.data });
+  } catch (error) {
+    dispatch({
+      type: "GET_PATIENT_APPOINTMENTS_FAIL",
+      payload: error.response?.data || { message: "Không lấy được danh sách lịch khám" },
+    });
+  }
+};

@@ -34,7 +34,7 @@ class AppointmentProcessView(APIView):
             return Response({"message": "Cập nhật cuộc hẹn thất bại", "errors": serializer.errors}, status=400)
 
 class AppointmentListView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def get(self, request):
         trang_thai = request.query_params.get('trang_thai', None)
@@ -87,3 +87,24 @@ class AppointmentDetailView(APIView):
             return Response(serializer.data, status=200)
         except Appointment.DoesNotExist:
             return Response({"message": "Cuộc hẹn không tồn tại"}, status=404)
+class PatientAppointmentsView(APIView):
+    #permission_classes = [IsAuthenticated]
+
+    def get(self, request, patient_id):
+        trang_thai = request.query_params.get('trang_thai', None)
+        ngay_kham = request.query_params.get('ngay_kham', None)
+        sort_by = request.query_params.get('sort_by', 'ngay_kham')
+
+        appointments = Appointment.objects.filter(patient_id=patient_id)
+        if trang_thai:
+            appointments = appointments.filter(trang_thai=trang_thai)
+        if ngay_kham:
+            appointments = appointments.filter(ngay_kham=ngay_kham)
+
+        if sort_by == 'ngay_kham':
+            appointments = appointments.order_by('ngay_kham', 'gio_kham')
+        elif sort_by == '-ngay_kham':
+            appointments = appointments.order_by('-ngay_kham', '-gio_kham')
+
+        serializer = AppointmentSerializer(appointments, many=True)
+        return Response(serializer.data, status=200)

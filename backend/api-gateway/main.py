@@ -103,11 +103,11 @@ async def patient_logout(data: dict, credentials: HTTPAuthorizationCredentials =
 
 @app.get("/patient/{endpoint:path}")
 async def patient_get(endpoint: str, request: Request):
-    auth_header = request.headers.get("authorization")
+    #auth_header = request.headers.get("authorization")
     patient_id = request.headers.get("X-Patient-ID")  # Lấy patient_id từ header
     headers = {}
-    if auth_header:
-        headers["Authorization"] = auth_header
+    #if auth_header:
+        #headers["Authorization"] = auth_header
     if patient_id:
         headers["X-Patient-ID"] = patient_id  # Truyền patient_id qua header
     return forward_request("patient", endpoint, "GET", headers=headers)
@@ -117,19 +117,19 @@ async def patient_post(endpoint: str, data: dict, credentials: HTTPAuthorization
     if endpoint in ["login", "register", "token/refresh"]:
         raise HTTPException(status_code=400, detail="Use specific login/register/token-refresh endpoint")
     await verify_token(credentials)  # Kiểm tra token hợp lệ
-    headers = {"Authorization": f"Bearer {credentials.credentials}"}
+    headers = {}
     return forward_request("patient", endpoint, "POST", data=data, headers=headers)
 
 @app.put("/patient/{endpoint:path}")
 async def patient_put(endpoint: str, data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
     await verify_token(credentials)  # Kiểm tra token hợp lệ
-    headers = {"Authorization": f"Bearer {credentials.credentials}"}
+    headers = {}
     return forward_request("patient", endpoint, "PUT", data=data, headers=headers)
 
 @app.delete("/patient/{endpoint:path}")
 async def patient_delete(endpoint: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
     await verify_token(credentials)  # Kiểm tra token hợp lệ
-    headers = {"Authorization": f"Bearer {credentials.credentials}"}
+    headers = {}
     return forward_request("patient", endpoint, "DELETE", headers=headers)
 
 # Định tuyến cho Doctor Service
@@ -254,20 +254,20 @@ async def staff_post(endpoint: str, data: dict, credentials: HTTPAuthorizationCr
 @app.put("/staff/{endpoint:path}")
 async def staff_put(endpoint: str, data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
     await verify_token(credentials)
-    headers = {"Authorization": f"Bearer {credentials.credentials}"}
+    headers = {}
     return forward_request("staff", endpoint, "PUT", data=data, headers=headers)
 
 @app.delete("/staff/{endpoint:path}")
 async def staff_delete(endpoint: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
     await verify_token(credentials)
-    headers = {"Authorization": f"Bearer {credentials.credentials}"}
+    headers = {}
     return forward_request("staff", endpoint, "DELETE", headers=headers)
 
 # Định tuyến cho Appointment Service
 @app.get("/appointment/{endpoint:path}")
 async def appointment_get(endpoint: str, request: Request):
     # Lấy Authorization header nếu có, không bắt buộc
-    auth_header = request.headers.get("authorization")
+    auth_header = request.headers.get("Authorization")
     headers = {}
     if auth_header:
         headers["Authorization"] = auth_header
@@ -301,50 +301,50 @@ async def appointment_delete(endpoint: str, request: Request):
 @app.get("/clinic-report/{endpoint:path}")
 async def clinic_report_get(endpoint: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
     await verify_token(credentials)
-    headers = {"Authorization": f"Bearer {credentials.credentials}"}
+    headers = {}
     return forward_request("clinic-report", endpoint, "GET", headers=headers)
 
 @app.post("/clinic-report/{endpoint:path}")
 async def clinic_report_post(endpoint: str, data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
     await verify_token(credentials)
-    headers = {"Authorization": f"Bearer {credentials.credentials}"}
+    headers = {}
     return forward_request("clinic-report", endpoint, "POST", data=data, headers=headers)
 
 @app.put("/clinic-report/{endpoint:path}")
 async def clinic_report_put(endpoint: str, data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
     await verify_token(credentials)
-    headers = {"Authorization": f"Bearer {credentials.credentials}"}
+    headers = {}
     return forward_request("clinic-report", endpoint, "PUT", data=data, headers=headers)
 
 @app.delete("/clinic-report/{endpoint:path}")
 async def clinic_report_delete(endpoint: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
     await verify_token(credentials)
-    headers = {"Authorization": f"Bearer {credentials.credentials}"}
+    headers = {}
     return forward_request("clinic-report", endpoint, "DELETE", headers=headers)
 
 # Định tuyến cho Payment Service
 @app.get("/payment/{endpoint:path}")
 async def payment_get(endpoint: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
     #await verify_token(credentials)
-    headers = {"Authorization": f"Bearer {credentials.credentials}"}
+    headers = {}
     return forward_request("payment", endpoint, "GET", headers=headers)
 
 @app.post("/payment/{endpoint:path}")
 async def payment_post(endpoint: str, data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
     #await verify_token(credentials)
-    headers = {"Authorization": f"Bearer {credentials.credentials}"}
+    headers = {}
     return forward_request("payment", endpoint, "POST", data=data, headers=headers)
 
 @app.put("/payment/{endpoint:path}")
 async def payment_put(endpoint: str, data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
     #await verify_token(credentials)
-    headers = {"Authorization": f"Bearer {credentials.credentials}"}
+    headers = {}
     return forward_request("payment", endpoint, "PUT", data=data, headers=headers)
 
 @app.delete("/payment/{endpoint:path}")
 async def payment_delete(endpoint: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
     #await verify_token(credentials)
-    headers = {"Authorization": f"Bearer {credentials.credentials}"}
+    headers = {}
     return forward_request("payment", endpoint, "DELETE", headers=headers)
 
 if __name__ == "__main__":

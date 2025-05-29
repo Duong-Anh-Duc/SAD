@@ -22,7 +22,7 @@ export const restoreSession = () => async (dispatch) => {
 export const registerStaff = (staffData) => async (dispatch) => {
   try {
     const res = await axios.post(`${API_GATEWAY_URL}/register/`, staffData);
-    if (res && res.status === 200) {
+    if (res && res.status === 201) {
       dispatch({ type: 'REGISTER_SUCCESS', payload: res.data });
     } else {
       throw new Error(res.data?.message || 'Đăng ký thất bại');
@@ -212,7 +212,7 @@ export const fetchAppointments = () => async (dispatch) => {
     const token = localStorage.getItem('access_token');
     if (!token) throw new Error('Không có token để xác thực');
     const res = await axios.get(`${APPOINTMENT_API_GATEWAY_URL}/list/`, {
-      headers: { Authorization: `Bearer ${token}` }
+      // headers: { Authorization: `Bearer ${token}` }
     });
     dispatch({ type: 'FETCH_APPOINTMENTS_SUCCESS', payload: res.data });
   } catch (error) {

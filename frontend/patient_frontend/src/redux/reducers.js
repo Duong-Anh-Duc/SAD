@@ -3,6 +3,10 @@ const initialState = {
   patients: [],
   doctors: [],
   payments: [],
+  appointments: [], // Lịch khám (tất cả trạng thái trừ hoan_thanh)
+  medicalHistories: [], // Lịch sử khám bệnh (chỉ hoan_thanh)
+  health_insurances: [],
+  doctor: null,
   error: null,
   accessToken: null,
   patientId: null,
@@ -29,7 +33,7 @@ const patientReducer = (state = initialState, action) => {
     case "LOGOUT_FAIL":
       return { ...state, error: action.payload };
     case "GET_DETAIL_SUCCESS":
-      return { ...state, patient: action.payload, error: null }; // Đã sửa từ ...merit thành ...state
+      return { ...state, patient: action.payload, error: null };
     case "GET_DETAIL_FAIL":
       return { ...state, error: action.payload };
     case "GET_ALL_SUCCESS":
@@ -39,10 +43,7 @@ const patientReducer = (state = initialState, action) => {
     case "CREATE_APPOINTMENT_SUCCESS":
       return {
         ...state,
-        patient: {
-          ...state.patient,
-          appointments: [...(state.patient.appointments || []), action.payload],
-        },
+        appointments: [...(state.appointments || []), action.payload],
         error: null,
       };
     case "CREATE_APPOINTMENT_FAIL":
@@ -50,12 +51,9 @@ const patientReducer = (state = initialState, action) => {
     case "CANCEL_APPOINTMENT_SUCCESS":
       return {
         ...state,
-        patient: {
-          ...state.patient,
-          appointments: state.patient.appointments.map((appt) =>
-            appt.id === action.payload ? { ...appt, trang_thai: "da_huy" } : appt
-          ),
-        },
+        appointments: state.appointments.map((appt) =>
+          appt.id === action.payload ? { ...appt, trang_thai: "da_huy" } : appt
+        ),
         error: null,
       };
     case "CANCEL_APPOINTMENT_FAIL":
@@ -78,57 +76,61 @@ const patientReducer = (state = initialState, action) => {
       };
     case "UPDATE_PAYMENT_FAIL":
       return { ...state, error: action.payload };
-    default:
-      return state;
-      // reducer.js
     case "UPDATE_PATIENT_SUCCESS":
       return {
         ...state,
-        patient: { ...state.patient, patient: action.payload },
+        patient: action.payload,
         error: null,
       };
     case "UPDATE_PATIENT_FAIL":
       return { ...state, error: action.payload };
-    // reducer.js
-case "GET_INSURANCES_SUCCESS":
-  return { ...state, health_insurances: action.payload, error: null };
-case "GET_INSURANCES_FAIL":
-  return { ...state, error: action.payload };
-case "CREATE_INSURANCE_SUCCESS":
-  return {
-    ...state,
-    health_insurances: [...(state.health_insurances || []), action.payload],
-    error: null,
-  };
-case "CREATE_INSURANCE_FAIL":
-  return { ...state, error: action.payload };
-case "UPDATE_INSURANCE_SUCCESS":
-  return {
-    ...state,
-    health_insurances: state.health_insurances.map((ins) =>
-      ins.id === action.payload.id ? action.payload : ins
-    ),
-    error: null,
-  };
-case "UPDATE_INSURANCE_FAIL":
-  return { ...state, error: action.payload };
-case "DELETE_INSURANCE_SUCCESS":
-  return {
-    ...state,
-    health_insurances: state.health_insurances.filter(
-      (ins) => ins.id !== action.payload
-    ),
-    error: null,
-  };
-case "DELETE_INSURANCE_FAIL":
-  return { ...state, error: action.payload };
-  // reducer.js
-case "GET_DOCTOR_DETAIL_SUCCESS":
-  return { ...state, doctor: action.payload, error: null };
-case "GET_DOCTOR_DETAIL_FAIL":
-  return { ...state, error: action.payload };
-      }
-      
+    case "GET_INSURANCES_SUCCESS":
+      return { ...state, health_insurances: action.payload, error: null };
+    case "GET_INSURANCES_FAIL":
+      return { ...state, error: action.payload };
+    case "CREATE_INSURANCE_SUCCESS":
+      return {
+        ...state,
+        health_insurances: [...(state.health_insurances || []), action.payload],
+        error: null,
+      };
+    case "CREATE_INSURANCE_FAIL":
+      return { ...state, error: action.payload };
+    case "UPDATE_INSURANCE_SUCCESS":
+      return {
+        ...state,
+        health_insurances: state.health_insurances.map((ins) =>
+          ins.id === action.payload.id ? action.payload : ins
+        ),
+        error: null,
+      };
+    case "UPDATE_INSURANCE_FAIL":
+      return { ...state, error: action.payload };
+    case "DELETE_INSURANCE_SUCCESS":
+      return {
+        ...state,
+        health_insurances: state.health_insurances.filter(
+          (ins) => ins.id !== action.payload
+        ),
+        error: null,
+      };
+    case "DELETE_INSURANCE_FAIL":
+      return { ...state, error: action.payload };
+    case "GET_DOCTOR_DETAIL_SUCCESS":
+      return { ...state, doctor: action.payload, error: null };
+    case "GET_DOCTOR_DETAIL_FAIL":
+      return { ...state, error: action.payload };
+    case "GET_PATIENT_APPOINTMENTS_SUCCESS":
+      return { ...state, appointments: action.payload, error: null };
+    case "GET_PATIENT_APPOINTMENTS_FAIL":
+      return { ...state, error: action.payload };
+    case "GET_MEDICAL_HISTORY_SUCCESS": // Thêm để lưu lịch sử khám bệnh
+      return { ...state, medicalHistories: action.payload, error: null };
+    case "GET_MEDICAL_HISTORY_FAIL":
+      return { ...state, error: action.payload };
+    default:
+      return state;
+  }
 };
 
 export default patientReducer;

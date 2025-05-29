@@ -145,7 +145,7 @@ const StaffHome = () => {
         draggable: true,
       });
     });
-  }, [dispatch, error]);
+  }, [dispatch]);
 
   const handlePatientChange = (patientId) => {
     setSelectedPatientId(patientId);

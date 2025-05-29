@@ -44,7 +44,7 @@ export const restoreSession = () => async (dispatch) => {
 export const registerDoctor = (doctorData) => async (dispatch) => {
   try {
     const res = await axios.post(`${API_GATEWAY_URL}/register/`, doctorData);
-    if (res && res.status === 201) {
+    if (res && res.status === 200) {
       dispatch({ type: 'REGISTER_SUCCESS', payload: res.data });
     } else {
       throw new Error(res.data?.message || 'Đăng ký thất bại');
@@ -179,21 +179,17 @@ export const confirmAppointment = (id, data) => async (dispatch) => {
 
 export const createClinicReport = (reportData) => async (dispatch) => {
   try {
-    const res = await axios.post(`${CLINIC_REPORT_API_GATEWAY_URL}/create/`, reportData);
+    const res = await axios.post(`${CLINIC_REPORT_API_GATEWAY_URL}/create/`, reportData, {
+      //headers: { Authorization: `Bearer ${token}` }
+    });
     if (res && res.status === 201) {
-      dispatch({ type: "CREATE_CLINIC_REPORT_SUCCESS", payload: res.data });
+      dispatch({ type: 'CREATE_CLINIC_REPORT_SUCCESS', payload: res.data });
       return res.data;
     } else {
-      dispatch({
-        type: "CREATE_CLINIC_REPORT_FAIL",
-        payload: res.data?.message || "Tạo phiếu kết luận thất bại",
-      });
+      throw new Error(res.data?.message || 'Tạo phiếu kết luận thất bại');
     }
   } catch (error) {
-    console.error("Error creating clinic report:", error.response?.data || error.message);
-    dispatch({
-      type: "CREATE_CLINIC_REPORT_FAIL",
-      payload: error.response?.data || { message: "Tạo phiếu kết luận thất bại" },
-    });
+    dispatch({ type: 'CREATE_CLINIC_REPORT_FAIL', payload: error.response?.data || { message: 'Tạo phiếu kết luận thất bại' } });
+    throw error;
   }
 };

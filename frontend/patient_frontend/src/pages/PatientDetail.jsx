@@ -27,7 +27,7 @@ const PatientDetail = () => {
     } else {
       navigate("/login");
     }
-  }, [dispatch, navigate]); // Loại bỏ handleApiError nếu không cần
+  }, [dispatch, navigate]);
 
   if (!patientData)
     return (
@@ -37,7 +37,6 @@ const PatientDetail = () => {
     );
 
   const patient = patientData.patient || {};
-  const medicalHistories = patientData.medical_histories || [];
   const appointments = patientData.appointments || [];
 
   const handleUpdate = () => {
@@ -47,7 +46,8 @@ const PatientDetail = () => {
   return (
     <Container>
       <PatientInfo patient={patient} onUpdate={handleUpdate} />
-      <MedicalHistory medicalHistories={medicalHistories} />
+      <MedicalHistory patientId={patient.id} />{" "}
+      {/* Truyền patientId thay vì medicalHistories */}
       <Appointments
         appointments={appointments}
         patientId={patient.id}
